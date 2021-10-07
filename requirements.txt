@@ -1,0 +1,6 @@
+pandas
+numpy
+kaggle
+html5lib
+lxml
+certifi
