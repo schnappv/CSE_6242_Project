@@ -1,0 +1,517 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r read_data}
+library(readr)
+data <- read_csv("C:/Users/cmors/OneDrive/Desktop/AirBenders/aqi_daily_1980_to_2021.csv", 
+    col_types = cols(Date = col_date(format = "%Y-%m-%d")))
+```
+
+```{r import_libraries, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+```{r}
+head(data, 2)
+```
+
+```{r}
+nrow(data[(rowSums(is.na(data)) > 0), ])
+```
+
+No missing data!
+
+
+```{r}
+data %>% 
+  group_by(`Defining Parameter`, Category) %>% 
+  summarise('avg_aqi' = mean(AQI), .groups = 'drop') %>% 
+  ggplot(aes(x = `Defining Parameter`, y = avg_aqi, color = Category)) + 
+  geom_point()
+```
+```{r message=FALSE}
+data %>% 
+  filter(Category == 'Hazardous') %>% 
+  filter(`Defining Parameter` == 'PM10') %>% 
+  group_by(`County Name`) %>% 
+  summarise(avg_aqi = mean(AQI),
+            num_obs = n(),
+            .groups = 'drop') %>% 
+  arrange(desc(num_obs)) %>% 
+  left_join(data) %>% 
+  select(`State Name`, `County Name`, avg_aqi, num_obs) %>% 
+  distinct()
+```
+
+
+
+```{r}
+data %>% 
+  group_by(`Defining Parameter`, Category) %>% 
+  summarise('num_obs' = n(), .groups = 'drop') %>% 
+  ggplot(aes(x = `Defining Parameter`, y = num_obs, color = Category)) + 
+  geom_point()
+```
+```{r}
+data %>% 
+  filter(Category %in% c('Hazardous','Unhealthy','Unhealthy for Sensitive Groups','Very Unhealthy')) %>% 
+  group_by(`Defining Parameter`, Category) %>% 
+  summarise('num_obs' = n(), .groups = 'drop') %>% 
+  ggplot(aes(x = `Defining Parameter`, y = num_obs, color = Category)) + 
+  geom_point()
+```
+
+
+
+
+```{r}
+data %>% 
+  group_by(`State Name`) %>% 
+  summarise('avg_aqi' = mean(AQI), .groups = 'drop') %>% 
+  arrange(desc(avg_aqi))
+```
+
+```{r}
+data %>% 
+  group_by(`State Name`, `Defining Parameter`) %>% 
+  summarise('avg_aqi' = mean(AQI), .groups = 'drop') %>% 
+  arrange(desc(avg_aqi))
+```
+
+```{r}
+params <- unique(data$`Defining Parameter`)
+params
+```
+
+
+```{r}
+data_slim <- data %>% select(-c(Category,Latitude,Longitude)) %>% select(`State Name`, `County Name`, Date, `Defining Parameter`, AQI)
+```
+```{r}
+head(data_slim, 4)
+```
+
+```{r}
+min(data_slim$Date)
+```
+```{r}
+data_slim$Year <- format(data_slim$Date, format = "%Y")
+```
+```{r}
+data_slim <- data_slim %>% 
+  mutate(Year = as.integer(Year)) %>% 
+  select(Year, `State Name`, `County Name`, `Defining Parameter`, AQI)
+  
+colnames(data_slim) <- c('Year','State','County','Parameter','AQI')
+```
+
+```{r}
+head(data_slim, 4)
+```
+
+## Add Mortality
+
+### 1980
+
+```{r}
+Mortality1980 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1980.txt")
+```
+```{r}
+head(Mortality1980, 4)
+```
+
+```{r}
+mort_1980 <- Mortality1980 %>% 
+  filter(Notes != 'Total')
+
+head(mort_1980)
+```
+
+```{r}
+mort_1980_notes <- mort_1980 %>% filter(Notes != '') %>% select(Notes)
+
+mort_1980_notes
+```
+```{r}
+mort_1980 <- mort_1980 %>% select(-Notes)
+```
+```{r}
+mort_1980[rowSums(is.na(mort_1980)) > 0, ]
+```
+
+Only missing data from the rows associated with notes above.
+
+```{r}
+mort_1980 <- mort_1980[rowSums(is.na(mort_1980)) == 0, ]
+dim(mort_1980)
+```
+
+```{r}
+mort_1980 <- mort_1980 %>% 
+  separate(County, into = c('County','State_ab'), sep = ', ') %>% 
+  mutate(County = str_remove_all(County, ' County')) %>% 
+  select(Year, State, County, ICD.Chapter, Deaths, Population, Crude.Rate)
+
+head(mort_1980, 4)
+```
+
+```{r}
+mortality_data <- function(year_data) {
+  new_data <- year_data %>%          
+    filter(Notes == 'Total') %>%    # get cumulative cardio-pulm data
+    select(-c(Notes, ICD.Chapter, Crude.Rate))  # remove unneeded columns
+  
+  new_data <- new_data[rowSums(is.na(new_data)) == 0, ] # remove blank rows
+  
+  new_data <- new_data %>% 
+    separate(County, into = c('County','State_ab'), sep = ', ') %>% 
+    mutate(County = str_remove_all(County, ' County')) %>% 
+    select(Year, State, County, Deaths, Population)
+}
+```
+
+```{r}
+Mortality1980 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1980.txt")
+mort_1980 <- mortality_data(Mortality1980)
+```
+
+
+### 1981
+
+```{r}
+Mortality1981 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1981.txt")
+mort_1981 <- mortality_data(Mortality1981)
+```
+
+
+### 1982
+
+```{r}
+Mortality1982 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1982.txt")
+mort_1982 <- mortality_data(Mortality1982)
+```
+
+
+### 1983
+
+```{r}
+Mortality1983 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1983.txt")
+mort_1983 <- mortality_data(Mortality1983)
+```
+
+
+### 1984
+
+```{r}
+Mortality1984 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1984.txt")
+mort_1984 <- mortality_data(Mortality1984)
+```
+
+
+### 1985
+
+```{r}
+Mortality1985 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1985.txt")
+mort_1985 <- mortality_data(Mortality1985)
+```
+
+
+### 1986
+
+```{r}
+Mortality1986 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1986.txt")
+mort_1986 <- mortality_data(Mortality1986)
+```
+
+
+### 1987
+
+```{r}
+Mortality1987 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1987.txt")
+mort_1987 <- mortality_data(Mortality1987)
+```
+
+
+### 1988
+
+```{r}
+Mortality1988 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1988.txt")
+mort_1988 <- mortality_data(Mortality1988)
+```
+```{r}
+head(mort_1988)
+```
+
+
+### 1989
+
+```{r}
+Mortality1989 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1989.txt")
+```
+```{r}
+head(Mortality1989)
+```
+```{r}
+Mortality1989 %>% 
+  filter(Notes != '')
+```
+
+Data no longer contains a "total" row.
+
+```{r}
+mortality_data <- function(year_data) {
+  new_data <- year_data %>%          
+    select(-c(Notes, ICD.Chapter, Year.Code, State.Code, 
+              County.Code, ICD.Chapter.Code, Crude.Rate))      # remove unneeded columns
+    
+  new_data <- new_data[rowSums(is.na(new_data)) == 0, ] # remove blank rows
+  
+  new_data <- new_data %>% 
+    separate(County, into = c('County','State_ab'), sep = ', ') %>% 
+    mutate(County = str_remove_all(County, ' County')) %>% 
+    select(-State_ab) %>% 
+    group_by(Year, State, County) %>% 
+    summarise(Deaths = sum(Deaths),
+              Population = mean(Population),
+              .groups = 'drop')
+}
+```
+
+```{r}
+mort_1989 <- mortality_data(Mortality1989)
+```
+
+
+
+```{r}
+head(mort_1989, 4)
+```
+
+
+
+### 1990
+
+```{r}
+Mortality1990 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1990.txt")
+mort_1990 <- mortality_data(Mortality1990)
+```
+
+
+### 1991
+
+```{r}
+Mortality1991 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1991.txt")
+mort_1991 <- mortality_data(Mortality1991)
+```
+
+
+### 1992
+
+```{r}
+Mortality1992 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1992.txt")
+mort_1992 <- mortality_data(Mortality1992)
+```
+
+
+### 1993
+
+```{r}
+Mortality1993 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1993.txt")
+mort_1993 <- mortality_data(Mortality1993)
+```
+
+
+### 1994
+
+```{r}
+Mortality1994 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1994.txt")
+mort_1994 <- mortality_data(Mortality1994)
+```
+
+
+### 1995
+
+```{r}
+Mortality1995 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1995.txt")
+mort_1995 <- mortality_data(Mortality1995)
+```
+
+
+### 1996
+
+```{r}
+Mortality1996 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1996.txt")
+mort_1996 <- mortality_data(Mortality1996)
+```
+
+
+### 1997
+
+```{r}
+Mortality1997 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1997.txt")
+mort_1997 <- mortality_data(Mortality1997)
+```
+
+
+### 1998
+
+```{r}
+Mortality1998 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality1998.txt")
+mort_1998 <- mortality_data(Mortality1998)
+```
+
+
+
+```{r}
+mortality_1 <- rbind(mort_1998, mort_1997, mort_1996, mort_1995,
+                     mort_1994, mort_1993, mort_1992, mort_1991,
+                     mort_1990, mort_1989, mort_1988, mort_1987,
+                     mort_1986, mort_1985, mort_1984, mort_1983,
+                     mort_1982, mort_1981, mort_1980)
+```
+```{r}
+table(mortality_1$Year)
+```
+```{r}
+head(mortality_1, 4)
+```
+
+
+### 1999 - 2002
+
+```{r}
+mortality_data <- function(year_data) {
+  new_data <- year_data %>%          
+    select(-c(Notes, Year.Code, State.Code, 
+              County.Code, Crude.Rate))      # remove unneeded columns
+    
+  new_data <- new_data[rowSums(is.na(new_data)) == 0, ] # remove blank rows
+  
+  new_data <- new_data %>% 
+    separate(County, into = c('County','State_ab'), sep = ', ') %>% 
+    mutate(County = str_remove_all(County, ' County')) %>% 
+    select(-State_ab) %>% 
+    group_by(Year, State, County) %>% 
+    summarise(Deaths = sum(Deaths),
+              Population = mean(Population),
+              .groups = 'drop')
+}
+```
+
+```{r}
+Mortality1999_02 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality99_02.txt")
+
+mort_9902 <- mortality_data(Mortality1999_02)
+head(mort_9902, 4)
+```
+
+
+
+
+### 2003 - 2006
+
+```{r}
+Mortality03_06 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality03_06.txt")
+
+mort_0306 <- mortality_data(Mortality03_06)
+```
+
+
+### 2007 - 2010
+
+```{r}
+Mortality07_10 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality07_10.txt")
+
+mort_0710 <- mortality_data(Mortality07_10)
+```
+
+
+
+### 2011 - 2013
+
+```{r}
+Mortality11_13 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality11_13.txt")
+
+mort_1113 <- mortality_data(Mortality11_13)
+```
+
+
+
+### 2014 - 2016
+
+```{r}
+Mortality14_16 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/Mortality14_16.txt")
+
+mort_1416 <- mortality_data(Mortality14_16)
+```
+
+
+
+
+
+```{r}
+mortality <- rbind(mort_1416, mort_1113, mort_0710, mort_0306, mort_9902,
+                   mortality_1)
+
+table(mortality$Year)
+```
+
+
+
+```{r}
+head(mortality, 4)
+```
+
+```{r}
+data_summarized <- data_slim %>% 
+  group_by(Year, State, County) %>% 
+  summarise(AQI = mean(AQI), .groups = 'drop')
+
+head(data_summarized, 4)
+```
+
+```{r}
+data_combined <- left_join(mortality, data_summarized, by = c('Year','State','County'))
+
+head(data_combined, 4)
+```
+```{r}
+data_combined %>% 
+  filter(State == 'Alaska') %>% 
+  #filter(is.na(AQI)) %>% 
+  group_by(County) %>% 
+  summarise(n = n(), .groups = 'drop')
+```
+
+All of Alaska is missing from the AQI data after the merge
+
+```{r}
+data_slim %>% filter(State == 'Alaska')
+```
+
+
+
+```{r}
+data_combined_cont <- data_combined %>% filter(State != 'Alaska')
+```
+```{r}
+data_combined_cont %>%
+  filter(is.na(AQI)) %>% 
+  group_by(State, County) %>% 
+  summarise(n = n(), .groups = 'drop')
+```
+
+2,771 counties in the US (outside of Alaska) are missing AQI data.
+
+
+```{r}
+write.csv(data_slim, 'C:\\Users\\cmors\\OneDrive\\Desktop\\AirBenders\\aqi_data_slim.csv')
+```
+```{r}
+write.csv(data_combined, 'C:\\Users\\cmors\\OneDrive\\Desktop\\AirBenders\\data_combined.csv')
+```
+
