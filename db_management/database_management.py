@@ -1,5 +1,3 @@
-from os import readlink
-from src.database_management import create_table
 from config import connect
 import csv
 
