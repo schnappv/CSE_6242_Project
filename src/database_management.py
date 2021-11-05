@@ -28,7 +28,15 @@ def create_table(connection, database, table, fields_dict):
         raise Exception("Table could not be added")
 
 
-def csv_to_rows(csv_file, connection, database, table, fields_dict, header=True, index_col=True):
+def csv_to_rows(
+    csv_file,
+    connection,
+    database,
+    table,
+    fields_dict,
+    header=True,
+    index_col=True
+):
     """
     Adds rows of a CSV into database table
 
@@ -47,17 +55,24 @@ def csv_to_rows(csv_file, connection, database, table, fields_dict, header=True,
     q = "INSERT INTO {}.{} ({}) VALUES ({})".format(
         database, table, keys, values)
 
+    data = []
+
     with open(csv_file, 'r') as file:
         csv_reader = csv.reader(file)
         if header:
             next(csv_reader)
         for row in csv_reader:
+            for i in range(len(row)):
+                if row[i] == 'NA':
+                    row[i] = None
             r = row
             if index_col:
                 r = row[1:]
             val = tuple(r)
-            cursor.execute(q, val)
-            connection.commit()
-        print("Complete")
+            data.append(val)
+
+    cursor.executemany(q, data)
+    connection.commit()
+    print("Complete")
 
 # "INSERT INTO AQI.combined (Year, State, Parameter, AQI, Age_Group, Population, CP_deaths, Total_deaths, Pct_CP_Death) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
