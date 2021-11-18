@@ -1,5 +1,6 @@
 from config import connect
 import csv
+import pandas as pd
 
 
 def create_table(connection, database, table, fields_dict):
@@ -16,8 +17,7 @@ def create_table(connection, database, table, fields_dict):
         Exception: [description]
     """
     cursor = connection.cursor()
-    fields = "(" + ", ".join([k + ' ' + fields_dict[k]
-                              for k in fields_dict]) + ")"
+    fields = "(" + ", ".join([k + " " + fields_dict[k] for k in fields_dict]) + ")"
     print(fields)
     try:
         cursor.execute("CREATE TABLE {}.{} {}".format(database, table, fields))
@@ -27,13 +27,7 @@ def create_table(connection, database, table, fields_dict):
 
 
 def csv_to_rows(
-    csv_file,
-    connection,
-    database,
-    table,
-    fields_dict,
-    header=True,
-    index_col=True
+    csv_file, connection, database, table, fields_dict, header=True, index_col=True
 ):
     """
     Adds rows of a CSV into database table
@@ -50,18 +44,17 @@ def csv_to_rows(
     cursor = connection.cursor()
     keys = ", ".join([k for k in fields_dict])
     values = ", ".join([fields_dict[k] for k in fields_dict])
-    q = "INSERT INTO {}.{} ({}) VALUES ({})".format(
-        database, table, keys, values)
+    q = "INSERT INTO {}.{} ({}) VALUES ({})".format(database, table, keys, values)
 
     data = []
 
-    with open(csv_file, 'r') as file:
+    with open(csv_file, "r") as file:
         csv_reader = csv.reader(file)
         if header:
             next(csv_reader)
         for row in csv_reader:
             for i in range(len(row)):
-                if row[i] == 'NA':
+                if row[i] == "NA":
                     row[i] = None
             r = row
             if index_col:
@@ -73,4 +66,24 @@ def csv_to_rows(
     connection.commit()
     print("Complete")
 
-# "INSERT INTO AQI.combined (Year, State, Parameter, AQI, Age_Group, Population, CP_deaths, Total_deaths, Pct_CP_Death) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+
+def load_data(connection, database, table, q=None):
+    """
+    Loads the data from a database table
+
+    Args:
+        connection ([type]): [description]
+        database ([type]): [description]
+        table ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    cursor = connection.cursor()
+    if q is None:
+        q = "SELECT * FROM {}.{}".format(database, table)
+    cursor.execute(q)
+    field_names = [i[0] for i in cursor.description]
+    table_rows = cursor.fetchall()
+    df = pd.DataFrame(table_rows, columns=field_names)
+    return df
