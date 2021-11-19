@@ -1,0 +1,479 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+## AQI
+
+```{r}
+library(readr)
+aqi_data0 <- read_csv("C:/Users/cmors/OneDrive/Desktop/AirBenders/aqi_daily_1980_to_2021.csv", 
+    col_types = cols(Date = col_date(format = "%Y-%m-%d"), 
+        Category = col_skip()))
+```
+
+```{r}
+head(aqi_data0)
+```
+
+```{r}
+aqi_data0 <- separate(aqi_data0, Date, into = c('Year','Month','Day'), sep = '-')
+
+head(aqi_data0)
+```
+
+
+```{r}
+aqi_data <- aqi_data0 %>% 
+  select(Year, Month, `State Name`, Latitude, Longitude, AQI, `Defining Parameter`) %>% 
+  rename(State = `State Name`) %>% 
+  rename(Parameter = `Defining Parameter`) %>% 
+  filter(State != 'Alaska') %>% 
+  filter(State != 'Hawaii') %>% 
+  filter(State != 'Country Of Mexico') %>% 
+  filter(State != 'Virgin Islands') %>% 
+  filter(State != 'Puerto Rico') %>% 
+  group_by(Year, Month, State, Latitude, Longitude, Parameter) %>% 
+  summarise(AQI = mean(AQI), .groups= 'drop')
+  
+head(aqi_data)
+```
+
+```{r}
+#write.csv(aqi_data, 
+#          'C:\\Users\\cmors\\OneDrive\\Desktop\\AirBenders\\aqi_months_coords_1117.csv')
+```
+
+```{r}
+aqi <- aqi_data %>% 
+  select(-c(Latitude, Longitude)) %>% 
+  group_by(Year, Month, State, Parameter) %>% 
+  summarise(AQI = mean(AQI), .groups = 'drop')
+```
+
+
+
+
+
+## Mortality without Ages
+
+```{r}
+mortality_months1 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months1.txt")
+mortality_months2 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months2.txt")
+```
+```{r}
+head(mortality_months1)
+```
+
+```{r}
+clean_data <- function(data){
+  new_data <- data %>% filter(Notes == '')
+  new_data <- separate(new_data, Month.Code, c('Year','Month'), '/')
+  new_data <- new_data %>% select(Year, Month, State, Deaths)
+}
+```
+
+```{r}
+data1 <- clean_data(mortality_months1)
+data2 <- clean_data(mortality_months2)
+```
+
+```{r}
+head(data1)
+```
+```{r}
+table(data2$Year)
+```
+```{r}
+data2 <- data2 %>% rename(CP_Deaths = Deaths)
+```
+
+```{r}
+data_months <- merge(data1, data2) %>% 
+  mutate(CP_Percent = CP_Deaths / Deaths * 100)
+
+head(data_months)
+```
+
+## AQI + Mortality by Month
+
+```{r}
+aqi_mort_months <- left_join(aqi, data_months, by = c('Year', 'Month', 'State'))
+```
+
+```{r}
+#write.csv(aqi_mort_months, 
+#          'C:\\Users\\cmors\\OneDrive\\Desktop\\AirBenders\\aqi_mort_months_1117.csv')
+```
+
+
+
+
+# Mortality With Age Groups
+
+```{r}
+mortality_months_ages1_1 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months_ages1_1.txt")
+mortality_months_ages1_2 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months_ages1_2.txt")
+mortality_months_ages1_3 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months_ages1_3.txt")
+mortality_months_ages1_4 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months_ages1_4.txt")
+mortality_months_ages1_5 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months_ages1_5.txt")
+```
+
+```{r}
+mortality_months_ages2_1 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months_ages2_1.txt")
+mortality_months_ages2_2 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months_ages2_2.txt")
+mortality_months_ages2_3 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months_ages2_3.txt")
+mortality_months_ages2_4 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months_ages2_4.txt")
+mortality_months_ages2_5 <- read.delim("C:/Users/cmors/OneDrive/Desktop/AirBenders/mortality_months_ages2_5.txt")
+```
+
+
+```{r}
+head(mortality_months_ages1_1)
+```
+
+```{r}
+clean_ages_data <- function(data){
+  new_data <- data %>% filter(Notes == '')
+  new_data <- separate(new_data, Month.Code, c('Year','Month'), '/')
+  new_data <- new_data %>% select(Year, Month, State, Ten.Year.Age.Groups, Deaths)
+}
+```
+
+```{r}
+data_ages1_1 <- clean_ages_data(mortality_months_ages1_1)
+data_ages1_2 <- clean_ages_data(mortality_months_ages1_2)
+data_ages1_3 <- clean_ages_data(mortality_months_ages1_3)
+data_ages1_4 <- clean_ages_data(mortality_months_ages1_4)
+data_ages1_5 <- clean_ages_data(mortality_months_ages1_5)
+```
+```{r}
+data_ages1 <- rbind(data_ages1_1, data_ages1_2, 
+                    data_ages1_3, data_ages1_4,
+                    data_ages1_5)
+```
+```{r}
+table(data_ages1$Year)
+```
+```{r}
+data_ages1
+```
+
+
+```{r}
+clean_ages_data2 <- function(data){
+  new_data <- data %>% filter(Notes == '')
+  new_data <- separate(new_data, Month.Code, c('Year','Month'), '/')
+  new_data <- new_data %>% select(Year, Month, State, Ten.Year.Age.Groups, Deaths) %>% 
+    rename(CP_Deaths = Deaths)
+}
+```
+
+```{r}
+data_ages2_1 <- clean_ages_data2(mortality_months_ages2_1)
+data_ages2_2 <- clean_ages_data2(mortality_months_ages2_2)
+data_ages2_3 <- clean_ages_data2(mortality_months_ages2_3)
+data_ages2_4 <- clean_ages_data2(mortality_months_ages2_4)
+data_ages2_5 <- clean_ages_data2(mortality_months_ages2_5)
+```
+```{r}
+data_ages2 <- rbind(data_ages2_1, data_ages2_2, 
+                    data_ages2_3, data_ages2_4,
+                    data_ages2_5)
+```
+```{r}
+table(data_ages2$Year)
+```
+```{r}
+data_ages2
+```
+
+
+```{r}
+data_ages <- left_join(data_ages1, data_ages2, by = c('Year', 'Month', 'State', 'Ten.Year.Age.Groups'))
+
+head(data_ages)
+```
+```{r}
+table(data_ages$Year)
+```
+
+```{r}
+data_ages[which(data_ages$CP_Deaths > data_ages$Deaths), ]
+```
+```{r}
+data_ages <- data_ages %>% 
+  mutate(CP_Deaths = replace_na(CP_Deaths, 0),
+         CP_Percent = CP_Deaths / Deaths * 100)
+```
+
+```{r}
+aqi_mort_months_ages <- left_join(aqi, data_ages, by = c('Year', 'Month', 'State'))
+```
+
+```{r}
+#write.csv(aqi_mort_months_ages, 
+#          'C:\\Users\\cmors\\OneDrive\\Desktop\\AirBenders\\aqi_mort_months_ages_1117.csv')
+```
+
+
+
+```{r}
+youths <- aqi_mort_months_ages %>% 
+  filter(Ten.Year.Age.Groups != '85+ years') %>% 
+  filter(Ten.Year.Age.Groups != '75-84 years') %>% 
+  mutate(Pct_CP = CP_Deaths / Deaths * 100)
+```
+```{r}
+head(youths)
+```
+
+
+```{r}
+youths %>% ggplot(aes(x = Ten.Year.Age.Groups, y = CP_Percent)) + 
+  geom_boxplot()
+```
+
+```{r}
+comps <- aqi_mort_months_ages %>% 
+  mutate(AQI_cat = ifelse(AQI > 80, '>80',
+                      ifelse(AQI > 70, '71-80',
+                             ifelse(AQI > 60, '61-70',
+                                    ifelse(AQI > 50, '51-60',
+                                           ifelse(AQI > 40, '41-50', '< 40'))))))
+
+head(comps[comps$Year == '1999', ])
+```
+
+```{r}
+table(comps$AQI_cat)
+```
+```{r}
+comps %>% 
+  filter(!is.na(CP_Percent)) %>% 
+  group_by(AQI_cat) %>% 
+  summarise(CP_Percent = mean(CP_Percent), .groups = 'drop')
+```
+
+```{r}
+library(car)
+```
+
+```{r}
+anova1 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)))
+summary(anova1)
+```
+```{r}
+tukey1 <- TukeyHSD(anova1)
+tukey1
+```
+```{r}
+tukey1$AQI_cat[tukey1$AQI_cat[,4] < 0.05, ]
+```
+** Very good air quality is associated with higher rates of cardiopulmonary deaths.
+
+
+```{r}
+comps %>% 
+  filter(!is.na(CP_Percent)) %>% 
+  filter((Ten.Year.Age.Groups == '85+ years')|(Ten.Year.Age.Groups == '75-84 years')) %>% 
+  group_by(AQI_cat) %>% 
+  summarise(CP_Percent = mean(CP_Percent), .groups = 'drop')
+```
+
+```{r}
+anova2 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)) %>% 
+  filter(Ten.Year.Age.Groups == '85+ years'))
+summary(anova2)
+```
+```{r}
+tukey2 <- TukeyHSD(anova2)
+```
+```{r}
+tukey2$AQI_cat[tukey2$AQI_cat[,4] < 0.05, ]
+```
+
+```{r}
+anova3 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)) %>% 
+  filter(Ten.Year.Age.Groups == '75-84 years'))
+summary(anova3)
+```
+```{r}
+tukey3 <- TukeyHSD(anova3)
+tukey3$AQI_cat[tukey3$AQI_cat[,4] < 0.05, ]
+```
+
+
+
+
+```{r}
+anova4 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)) %>% 
+  filter(Ten.Year.Age.Groups == '65-74 years'))
+summary(anova4)
+```
+```{r}
+tukey4 <- TukeyHSD(anova4)
+tukey4$AQI_cat[tukey4$AQI_cat[,4] < 0.05, ]
+```
+
+
+
+```{r}
+anova5 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)) %>% 
+  filter(Ten.Year.Age.Groups == '55-64 years'))
+summary(anova5)
+```
+```{r}
+tukey5 <- TukeyHSD(anova5)
+tukey5$AQI_cat[tukey5$AQI_cat[,4] < 0.05, ]
+```
+
+
+```{r}
+anova6 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)) %>% 
+  filter(Ten.Year.Age.Groups == '45-54 years'))
+summary(anova6)
+```
+```{r}
+tukey6 <- TukeyHSD(anova6)
+tukey6$AQI_cat[tukey6$AQI_cat[,4] < 0.05, ]
+```
+
+
+
+
+
+```{r}
+anova7 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)) %>% 
+  filter(Ten.Year.Age.Groups == '35-44 years'))
+summary(anova7)
+```
+```{r}
+tukey7 <- TukeyHSD(anova7)
+tukey7$AQI_cat[tukey7$AQI_cat[,4] < 0.05, ]
+```
+
+
+
+
+```{r}
+anova8 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)) %>% 
+  filter(Ten.Year.Age.Groups == '25-34 years'))
+summary(anova8)
+```
+```{r}
+tukey8 <- TukeyHSD(anova8)
+tukey8$AQI_cat[tukey8$AQI_cat[,4] < 0.05, ]
+```
+
+
+
+
+```{r}
+anova9 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)) %>% 
+  filter(Ten.Year.Age.Groups == '15-24 years'))
+summary(anova9)
+```
+```{r}
+tukey9 <- TukeyHSD(anova9)
+tukey9$AQI_cat[tukey9$AQI_cat[,4] < 0.05, ]
+```
+
+
+
+
+```{r}
+anova10 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)) %>% 
+  filter(Ten.Year.Age.Groups == '5-14 years'))
+summary(anova10)
+```
+```{r}
+tukey10 <- TukeyHSD(anova10)
+tukey10$AQI_cat[tukey10$AQI_cat[,4] < 0.05, ]
+```
+
+
+
+```{r}
+anova11 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)) %>% 
+  filter(Ten.Year.Age.Groups == '1-4 years'))
+summary(anova11)
+```
+```{r}
+tukey11 <- TukeyHSD(anova11)
+tukey11$AQI_cat[tukey11$AQI_cat[,4] < 0.05, ]
+```
+
+
+
+```{r}
+anova12 <- aov(CP_Percent ~ AQI_cat, data = comps %>% filter(!is.na(CP_Percent)) %>% 
+  filter(Ten.Year.Age.Groups == '< 1 year'))
+summary(anova12)
+```
+```{r}
+tukey12 <- TukeyHSD(anova12)
+tukey12$AQI_cat[tukey12$AQI_cat[,4] < 0.05, ]
+```
+
+
+```{r}
+comps %>% 
+  filter(Ten.Year.Age.Groups == '85+ years') %>% 
+  mutate(AQI_cat = factor(AQI_cat, levels = c('>80','71-80','61-70','51-60','41-50','< 40'))) %>% 
+  ggplot(aes(x = AQI_cat, y = CP_Percent)) + 
+  geom_boxplot(fill = 'navyblue', color = 'goldenrod') +
+  theme_bw() +
+  labs(title = 'Percentage CP Deaths per AQI category: ages 85+',
+       x = 'AQI Category',
+       y = 'Percentage of Deaths with CP Diagnosis')
+```
+
+
+
+```{r}
+comps %>% 
+  filter(Ten.Year.Age.Groups == '85+ years') %>% 
+  filter(Parameter == 'CO') %>% 
+  mutate(AQI_cat = factor(AQI_cat, levels = c('>80','71-80','61-70','51-60','41-50','< 40'))) %>% 
+  ggplot(aes(x = AQI_cat, y = CP_Percent)) + 
+  geom_boxplot(fill = 'navyblue', color = 'goldenrod') +
+  theme_bw() +
+  labs(title = 'Percentage CP Deaths per CO-AQI category: ages 85+',
+       x = 'CO AQI Category',
+       y = 'Percentage of Deaths with CP Diagnosis')
+```
+```{r}
+comps %>% 
+  filter(Ten.Year.Age.Groups == '85+ years') %>% 
+  filter(Parameter == 'SO2') %>% 
+  mutate(AQI_cat = factor(AQI_cat, levels = c('>80','71-80','61-70','51-60','41-50','< 40'))) %>% 
+  ggplot(aes(x = AQI_cat, y = CP_Percent)) + 
+  geom_boxplot(fill = 'navyblue', color = 'goldenrod') +
+  theme_bw() +
+  labs(title = 'Percentage CP Deaths per NO2-AQI category: ages 85+',
+       x = 'NO2 AQI Category',
+       y = 'Percentage of Deaths with CP Diagnosis')
+```
+```{r}
+comps %>% 
+  filter(Ten.Year.Age.Groups == '85+ years') %>% 
+  filter(Parameter == 'NO2') %>% 
+  mutate(AQI_cat = factor(AQI_cat, levels = c('>80','71-80','61-70','51-60','41-50','< 40'))) %>% 
+  ggplot(aes(x = AQI_cat, y = CP_Percent)) + 
+  geom_boxplot(fill = 'navyblue', color = 'goldenrod') +
+  theme_bw() +
+  labs(title = 'Percentage CP Deaths per NO2-AQI category: ages 85+',
+       x = 'NO2 AQI Category',
+       y = 'Percentage of Deaths with CP Diagnosis')
+```
+
+
+
+
+
+
+
