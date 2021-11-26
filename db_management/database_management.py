@@ -8,13 +8,12 @@ def create_table(connection, database, table, fields_dict):
     Creates a table in MySQL database
 
     Args:
-        connection ([type]): [description]
-        database ([type]): [description]
-        table ([type]): [description]
-        fields_dict ([type]): [description]
-
+        connection (mysql.connector.connect): MySQL database connection
+        database (str): MySQL database connection
+        table (str): Name of table
+        fields_dict (dict): Dictionary of columns and types
     Raises:
-        Exception: [description]
+        Exception: Table cannot be added
     """
     cursor = connection.cursor()
     fields = "(" + ", ".join([k + " " + fields_dict[k] for k in fields_dict]) + ")"
@@ -22,7 +21,8 @@ def create_table(connection, database, table, fields_dict):
     try:
         cursor.execute("CREATE TABLE {}.{} {}".format(database, table, fields))
         print("Successfully added the table {} to {}".format(table, database))
-    except:
+    except Exception as e:
+        print(e)
         raise Exception("Table could not be added")
 
 
@@ -33,13 +33,13 @@ def csv_to_rows(
     Adds rows of a CSV into database table
 
     Args:
-        csv_file ([type]): [description]
-        connection ([type]): [description]
-        database ([type]): [description]
-        table ([type]): [description]
-        fields_dict ([type]): [description]
-        header (bool, optional): [description]. Defaults to True.
-        index_col (bool, optional): [description]. Defaults to True.
+        csv_file (str): CSV file name in the data folder
+        connection (mysql.connector.connect): MySQL database connection
+        database (str): Name of database
+        table (str): Name of table
+        fields_dict (dict): Dictionary of columns and types
+        header (bool, optional): If the header row is in CSV. Defaults to True.
+        index_col (bool, optional): If and index column is in CSV. Defaults to True.
     """
     cursor = connection.cursor()
     keys = ", ".join([k for k in fields_dict])
@@ -72,12 +72,13 @@ def load_data(connection, database, table, q=None):
     Loads the data from a database table
 
     Args:
-        connection ([type]): [description]
-        database ([type]): [description]
-        table ([type]): [description]
+        connection (mysql.connector.connect): MySQL database connection
+        database (str): Name of database
+        table (str): Name of table
+        q (str, optional): SQL query string. Defaults to None which just selects all.
 
     Returns:
-        [type]: [description]
+        pd.DataFrame: Pandas DataFrame of the queried data
     """
     cursor = connection.cursor()
     if q is None:
