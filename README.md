@@ -68,7 +68,16 @@ Machine Learning models built customized for the AQI dataset.
 
 - Models include:
     - Random Forest Regression `RFRRegressor`
-    - ARIMA Time series model (TODO)
+    - Time series model `TimeSeriesForecaster`
     
 Example can be found here: [notebooks](https://github.com/schnappv/CSE_6242_Project/tree/main/notebooks)
+
+### Dashboards
+
+We created our dashboards using QlikSense. To view the dashboards, follow this [link](https://53d1461or2ndxqa.us.qlikcloud.com/sense/app/2291b7fa-41bb-417e-9f3e-5951c0b390b2/overview). 
+
+To log in to the view only account please use:
+- Username: gatech.lastairbenders@gmail.com
+- password: #cse6242
+
 
