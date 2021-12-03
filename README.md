@@ -61,6 +61,7 @@ Connect to the MySQL database and be able to add tables
 - Functions included: 
     - `create_table`: Creates a table in MySQL database
     - `csv_to_rows`: Adds rows of a CSV into database table
+    - `load_data`: Load the data from MySQL database table into a `pandas` dataframe
 
 ###   Modeling
 
@@ -69,12 +70,38 @@ Machine Learning models built customized for the AQI dataset.
 - Models include:
     - Random Forest Regression `RFRRegressor`
     - Time series model `TimeSeriesForecaster`
+
+
+#### `RFRRegressor`
+
+Random Forest Regressor for AQI x Mortality data
+
+- Parameters: 
+  - `target`: The target variable name
+  - `features`: The feature variables. Defaults to None, which will select all incoming dataframe columns aside from target variable a feature.
+  - `random_seed`: Give a random state to model for reproducability. Defaults to None.
+- Functions:
+  - `prep`: Prepare the data for model
+  - `split_and_train`: Splits the data into training and testing and fits the inital model
+  - `hypertune`: Function to take the current model and hypertune it using the cross-validation method for specified parameters and then re-trains the model with the best parameters
+  - `predict_score_train`: Gets the score of the prediction from the training set
+  - `predict_score_test`: Gets the score of the prediction from the testing set
+  - `predict_data`: Predict the value of the target from a dataframe that includes all the features as fields
+
+Example can be found in __notebooks/RFR_using_functions.ipynb__
+
+
+#### `TimeSeriesForecaster`
     
 Example can be found here: [notebooks](https://github.com/schnappv/CSE_6242_Project/tree/main/notebooks)
 
 ### Dashboards
 
-We created our dashboards using QlikSense. To view the dashboards, follow this [link](https://53d1461or2ndxqa.us.qlikcloud.com/sense/app/2291b7fa-41bb-417e-9f3e-5951c0b390b2/overview). 
+We created our dashboards using QlikSense.
+
+These dashboards pull from the data we imported into GCP using the `db_management` functions.
+
+To view the dashboards, follow this [link](https://53d1461or2ndxqa.us.qlikcloud.com/sense/app/2291b7fa-41bb-417e-9f3e-5951c0b390b2/overview). 
 
 To log in to the view only account please use:
 - Username: gatech.lastairbenders@gmail.com
