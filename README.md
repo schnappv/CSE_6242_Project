@@ -39,6 +39,8 @@ We will be using a variety of different tools for our analysis:
 
 ## Quickstart
 
+The final product dashboard is hosted on Qlik. Set up information can be scene at the bottom under `Dashboards` section. Python installation only required for notebook and code changes. 
+
 Install all packages to a python virtual environment
 
 ```bash
