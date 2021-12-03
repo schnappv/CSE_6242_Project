@@ -93,7 +93,7 @@ Random Forest Regressor for AQI x Mortality data
 Example can be found in __notebooks/RFR_using_functions.ipynb__
 
 
-#### `TimeSeriesForecaster
+#### `TimeSeriesForecaster`
 
 Time Series Forecaster for AQI using FBProphet Package. Information on `fbprophet` can be found [here](https://facebook.github.io/prophet/docs/quick_start.html).
 
