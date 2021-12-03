@@ -45,7 +45,7 @@ Note: The final product dashboard is hosted on Qlik. Set up information can be s
 Install all packages to a python virtual environment:
 
 ```bash
-pip install -r requirements.txt
+pip install -r CODE/requirements.txt
 ```
 
 To run the Jupyter notebooks, point the command directory to the `CSE_6242_Project` folder and run:

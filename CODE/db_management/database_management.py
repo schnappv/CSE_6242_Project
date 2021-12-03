@@ -1,4 +1,4 @@
-from config import connect
+from CODE.config import connect
 import csv
 import pandas as pd
 
