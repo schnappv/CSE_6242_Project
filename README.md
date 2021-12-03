@@ -5,7 +5,8 @@ _Joseph McAndrews, Colleen Morse, Sunil Prasad, Valerie Schnapp, Jonathan Yang_
 
 -----------
 
-## About
+## DESCRIPTION
+
 Breathing clean fresh air is vital to life. From traditional
 medicinal practices to modern disease control, access
 to fresh air has long been integral to a healthy life. Un-
