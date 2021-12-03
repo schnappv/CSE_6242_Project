@@ -68,6 +68,11 @@ To log in to the view only account please use:
 - Username: gatech.lastairbenders@gmail.com
 - password: #cse6242
 
+
+## DEMO VIDEO
+
+For detailed video instruction, click [here](https://youtu.be/bpWxsvFqGo0).
+
 ------------
 
 ## CODE REVIEW
