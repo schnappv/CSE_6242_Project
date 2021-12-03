@@ -41,11 +41,18 @@ We will be using a variety of different tools for our analysis:
 
 The final product dashboard is hosted on Qlik. Set up information can be scene at the bottom under `Dashboards` section. Python installation only required for notebook and code changes. 
 
-First, clone the GitHub repository. Then, install all packages to a python virtual environment:
+Install all packages to a python virtual environment:
 
 ```bash
 pip install -r requirements.txt
 ```
+
+To run the Jupyter notebooks, point the command directory to the `CSE_6242_Project` folder and run:
+
+```bash
+jupyter notebook
+```
+
 ------------
 
 ## Sections
