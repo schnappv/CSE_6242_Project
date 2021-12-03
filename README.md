@@ -112,7 +112,7 @@ Random Forest Regressor for AQI x Mortality data
   - `predict_score_test`: Gets the score of the prediction from the testing set
   - `predict_data`: Predict the value of the target from a dataframe that includes all the features as fields
 
-Example can be found in __notebooks/RFR_using_functions.ipynb__
+Example can be found in __code/notebooks/RFR_using_functions.ipynb__
 
 
 #### `TimeSeriesForecaster`
@@ -124,6 +124,6 @@ Time Series Forecaster for AQI using FBProphet Package. Information on `fbprophe
   - `forecast`: Forecasts the monthly data
   - `plot_forecast`: Plots the forecast
 
-Example can be found in __notebooks/Time_Series.ipynb__
+Example can be found in __code/notebooks/Time_Series.ipynb__
 
 
