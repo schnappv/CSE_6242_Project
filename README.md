@@ -37,9 +37,9 @@ We will be using a variety of different tools for our analysis:
 
 -----------
 
-## Quickstart
+## INSTALLATION
 
-The final product dashboard is hosted on Qlik. Set up information can be scene at the bottom under `Dashboards` section. Python installation only required for notebook and code changes. 
+Note: The final product dashboard is hosted on Qlik. Set up information can be scene at the bottom under `EXECUTION` section. Python installation only required for notebook and code changes. If you are only looking to view the dashboards, please skip to the next section.
 
 Install all packages to a python virtual environment:
 
@@ -55,7 +55,21 @@ jupyter notebook
 
 ------------
 
-## Sections
+## EXECUTION
+
+We created our dashboards using QlikSense.
+
+These dashboards pull from the data we imported into GCP using the `db_management` functions.
+
+To view the dashboards, follow this [link](https://53d1461or2ndxqa.us.qlikcloud.com/sense/app/2291b7fa-41bb-417e-9f3e-5951c0b390b2/overview). 
+
+To log in to the view only account please use:
+- Username: gatech.lastairbenders@gmail.com
+- password: #cse6242
+
+------------
+
+## CODE REVIEW
 
 ###   Configurations `config.py`
 
@@ -110,17 +124,5 @@ Time Series Forecaster for AQI using FBProphet Package. Information on `fbprophe
   - `plot_forecast`: Plots the forecast
 
 Example can be found in __notebooks/Time_Series.ipynb__
-
-### Dashboards
-
-We created our dashboards using QlikSense.
-
-These dashboards pull from the data we imported into GCP using the `db_management` functions.
-
-To view the dashboards, follow this [link](https://53d1461or2ndxqa.us.qlikcloud.com/sense/app/2291b7fa-41bb-417e-9f3e-5951c0b390b2/overview). 
-
-To log in to the view only account please use:
-- Username: gatech.lastairbenders@gmail.com
-- password: #cse6242
 
 
